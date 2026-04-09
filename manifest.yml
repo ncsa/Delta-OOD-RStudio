@@ -1,7 +1,7 @@
 ---
-name: MATLAB
+name: RStudio
 category: Interactive Apps
-subcategory: MATLAB
+subcategory: RStudio
 role: batch_connect
 description: |
-  This app will launch MATLAB on one compute node.
+  This app will launch RStudio on one compute node.
