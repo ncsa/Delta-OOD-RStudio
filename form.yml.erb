@@ -25,24 +25,12 @@ cluster: "delta"
 # Define attribute values that aren't meant to be modified by the user within
 # the Dashboard form
 attributes:
-  # Set the corresponding modules that need to be loaded for Jupyter to run
-  #
-  # @note It is called within the batch job as `module load <modules>` if
-  #   defined
-  # @example Do not load any modules
-  #     modules: ""
-  # @example Using default python module
-  #     modules: "python"
-  # @example Using specific python module
-  #     modules: "python/3.5"
-  # @example Using combination of modules
-  #     modules: "python/3.5 cuda/8.0.44"
 
-  matlab_version:
-    label: "MATLAB Version"
-    widget: "select"
-    options:
-      - ["2024a","matlab/2024a"]
+  #rstudio_version:
+  #  label: "RStudio Version"
+  #  widget: "select"
+  #  options:
+  #    - ["R-base","rstudio/r-base"]
 
   bc_account:
     label: "Name of account"
@@ -116,7 +104,7 @@ attributes:
 #   option, then it will not appear in the form page that the user sees in the
 #   Dashboard
 form:
-  - matlab_version
+#  - rstudio_version
   - bc_account
   - bc_partition
   - bc_duration
