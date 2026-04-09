@@ -43,11 +43,11 @@ end
 
 # Find available port to run server on
 port=$(find_port)
-export MWI_APP_PORT=${port}
-export MWI_APP_HOST=${host}
+#export MWI_APP_PORT=${port}
+#export MWI_APP_HOST=${host}
 
 # Generate SHA1 encrypted password (requires OpenSSL installed)
-SALT="$(create_passwd 16)"
-password="$(create_passwd 16)"
-export MWI_AUTH_TOKEN=${password}
-PASSWORD_SHA1="$(echo -n "${password}${SALT}" | openssl dgst -sha1 | awk '{print $NF}')"
+#SALT="$(create_passwd 16)"
+#password="$(create_passwd 16)"
+#export MWI_AUTH_TOKEN=${password}
+#PASSWORD_SHA1="$(echo -n "${password}${SALT}" | openssl dgst -sha1 | awk '{print $NF}')"
