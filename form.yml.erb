@@ -87,12 +87,15 @@ attributes:
     value: "1:00:00"
     help: "Slurm format: DD-HH:MM:SS"
 
-  working_dir:
-    label: "Working Directory"
-    data-filepicker: true
-    data-target-file-type: dirs  # Valid values are: files, dirs, or both
-    readonly: false
-    help: "Select your project directory; defaults to $HOME"
+
+### RStudio allows the user to change WD interactively. It is possible to add this option on OOD view, but IMO, it is superfluous for RStudio.
+# VianaJPG - 20260723
+#  working_dir:
+#    label: "Working Directory"
+#    data-filepicker: true
+#    data-target-file-type: dirs  # Valid values are: files, dirs, or both
+#    readonly: false
+#    help: "Select your project directory; defaults to $HOME"
 
 # All of the attributes that make up the Dashboard form (in respective order),
 # and made available to the submit configuration file and the template ERB
@@ -113,4 +116,4 @@ form:
   - bc_num_memory
   - bc_num_gpus
   - bc_email_on_started
-  - working_dir
+#  - working_dir

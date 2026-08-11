@@ -4,7 +4,7 @@
 echo "TIMING - Starting main script at: $(date)"
 
 #
-# Start MATLAB Proxy Server
+# Start RStudio Server
 #
 
 # Purge the module environment to avoid conflicts
@@ -14,39 +14,70 @@ module purge
 
 module avail
 
-# Load the required modules
-if uname -r | grep -q "el9"; then
-  # RHEL 9 environment
-  module load default
-  APPTAINER_IMAGE=/sw/oodimages/matlab-proxy-rh9.sif
-else # RHEL 8 environment
-  module load default-s11
-  APPTAINER_IMAGE=/sw/oodimages/matlab-proxy.sif
-fi
-
-module load <%= context.matlab_version %>
-
 # List loaded modules
 module list
 
-# Benchmark info
-echo "TIMING - Starting MATLAB at: $(date)"
-
 # Check if we have a GPU
 if [ -n "$CUDA_VISIBLE_DEVICES" ]; then
-	APPTAINER_GPU_ENABLE="--nv"
+        APPTAINER_GPU_ENABLE="--nv"
 else
-	APPTAINER_GPU_ENABLE=""
+        APPTAINER_GPU_ENABLE=""
 fi
 
 env
 
-# Launch the Jupyter Notebook Server
+# Benchmark info
+echo "TIMING - Starting RStudio at: $(date)"
+
+# Define variables required by RStudio
 set -x
-apptainer exec --cleanenv ${APPTAINER_GPU_ENABLE} \
-	--bind /scratch,/sw,/u,/taiga,/projects,/work,/etc/profile.d,/etc/cray-pe.d,/opt/cray,/var/spool/slurmd/conf-cache:/etc/slurm,/opt/slurm,/var/run/munge \
-	--env PATH=${PATH} --env LD_LIBRARY_PATH=${LD_LIBRARY_PATH} --env MLM_LICENSE_FILE=${MLM_LICENSE_FILE} \
-	--env MWI_APP_HOST=${MWI_APP_HOST} --env MWI_APP_PORT=${MWI_APP_PORT} \
-	--env MWI_AUTH_TOKEN=${MWI_AUTH_TOKEN} \
-	--env MWI_MATLAB_STARTUP_SCRIPT="cd ${HOME}" --env MATLAB_HOME=${MATLAB_HOME} \
-        ${APPTAINER_IMAGE} matlab-proxy-app
+myUSER="${USER}"
+myHOME="${HOME}"
+
+## RStudio Temp Folders - THIS BLOCK should be used only for development purposes because otherwise temp files could fill up user storage
+#mkdir -p $myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/tmp
+#mkdir -p $myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/var/lib
+#mkdir -p $myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/var/run
+#myTMP="$myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/tmp"
+#myVARLIB="$myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/var/lib"
+#myVARRUN="$myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/var/run"
+
+mkdir -p /tmp/$myUSER/ood/rstudio/tmp
+mkdir -p /tmp/$myUSER/ood/rstudio/var/lib
+mkdir -p /tmp/$myUSER/ood/rstudio/var/run
+myTMP="/tmp/$myUSER/ood/rstudio/tmp"
+myVARLIB="/tmp/$myUSER/ood/rstudio/var/lib"
+myVARRUN="/tmp/$myUSER/ood/rstudio/var/run"
+
+# Launch the RStudio Server
+
+apptainer exec \
+	${APPTAINER_GPU_ENABLE} \
+        --bind /scratch \
+        --bind /sw \
+        --bind /u \
+        --bind /taiga \
+        --bind /projects \
+        --bind /work \
+        --bind /etc/profile.d \
+        --bind /etc/cray-pe.d \
+        --bind /opt/cray \
+        --bind /var/spool/slurmd/conf-cache:/etc/slurm \
+        --bind /opt/slurm \
+        --bind /var/run/munge \
+	--bind /usr/share/lmod \
+	--bind /usr/libexec/grepconf.sh \
+	--bind /usr/bin/lua \
+	--bind /usr/share/lua \
+	--bind /usr/lib64/lua \
+	--bind /usr/lib64/liblua.so:/usr/local/lib/liblua.so \
+	--bind /lib64/liblua-5.4.so:/usr/local/lib/liblua-5.4.so \
+	--bind /lib64/libcrypt.so.2:/usr/local/lib/libcrypt.so.2 \
+	--bind /lib64/libtcl8.6.so:/usr/local/lib/libtcl8.6.so \
+	--bind /usr/share/tcl8.6 \
+	--bind /usr/lib64/tcl8.6 \
+	--bind /usr/bin/tclsh \
+	--bind $myTMP:/tmp \
+        --bind $myVARLIB:/var/lib/rstudio-server \
+        --bind $myVARRUN:/var/run/rstudio-server \
+        /u/yanzhan2/ondemand/dev/RStudio/container-files/rstudio-app.sif rserver --www-address=0.0.0.0 --www-port=$port --server-user "$myUSER"
