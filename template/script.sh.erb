@@ -33,14 +33,15 @@ echo "TIMING - Starting RStudio at: $(date)"
 set -x
 myUSER="${USER}"
 myHOME="${HOME}"
-WORKDIR="${PWD}"
+OOD_ROOT="${PWD}"
+WORKDIR="${HOME}/scratch/.ood-rstudio"
 
-mkdir -p "${WORKDIR}/ood/rstudio/tmp"
-mkdir -p "${WORKDIR}/ood/rstudio/var/lib"
-mkdir -p "${WORKDIR}/ood/rstudio/var/run"
-myTMP="${WORKDIR}/ood/rstudio/tmp"
-myVARLIB="${WORKDIR}/ood/rstudio/var/lib"
-myVARRUN="${WORKDIR}/ood/rstudio/var/run"
+mkdir -p "${WORKDIR}/tmp"
+mkdir -p "${WORKDIR}/var/lib"
+mkdir -p "${WORKDIR}/var/run"
+myTMP="${WORKDIR}/tmp"
+myVARLIB="${WORKDIR}/var/lib"
+myVARRUN="${WORKDIR}/var/run"
 
 # Generate secure cookie for RStudio
 mkdir -p "${myTMP}/rstudio-server"
@@ -48,7 +49,7 @@ python3 -c 'from uuid import uuid4; print(uuid4())' > "${myTMP}/rstudio-server/s
 chmod 0600 "${myTMP}/rstudio-server/secure-cookie-key"
 
 # Launch the RStudio Server
-export RS_LOG_CONF_FILE="${WORKDIR}/logging.conf"
+export RS_LOG_CONF_FILE="${OOD_ROOT}/logging.conf"
 apptainer exec \
 	${APPTAINER_GPU_ENABLE} \
         --bind /scratch \
@@ -84,6 +85,6 @@ apptainer exec \
         --www-port=${port} \
         --server-user="${myUSER}" \
         --auth-none=0 \
-        --auth-pam-helper-path="${WORKDIR}/bin/auth" \
+        --auth-pam-helper-path="${OOD_ROOT}/bin/auth" \
         --auth-encrypt-password=0 \
         --secure-cookie-key-file="${myTMP}/rstudio-server/secure-cookie-key" 2>&1
