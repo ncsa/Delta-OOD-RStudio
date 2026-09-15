@@ -33,24 +33,22 @@ echo "TIMING - Starting RStudio at: $(date)"
 set -x
 myUSER="${USER}"
 myHOME="${HOME}"
+WORKDIR="${PWD}"
 
-## RStudio Temp Folders - THIS BLOCK should be used only for development purposes because otherwise temp files could fill up user storage
-#mkdir -p $myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/tmp
-#mkdir -p $myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/var/lib
-#mkdir -p $myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/var/run
-#myTMP="$myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/tmp"
-#myVARLIB="$myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/var/lib"
-#myVARRUN="$myHOME/ondemand/data/sys/dashboard/batch_connect/sys/rstudio/var/run"
+mkdir -p "${WORKDIR}/ood/rstudio/tmp"
+mkdir -p "${WORKDIR}/ood/rstudio/var/lib"
+mkdir -p "${WORKDIR}/ood/rstudio/var/run"
+myTMP="${WORKDIR}/ood/rstudio/tmp"
+myVARLIB="${WORKDIR}/ood/rstudio/var/lib"
+myVARRUN="${WORKDIR}/ood/rstudio/var/run"
 
-mkdir -p /tmp/$myUSER/ood/rstudio/tmp
-mkdir -p /tmp/$myUSER/ood/rstudio/var/lib
-mkdir -p /tmp/$myUSER/ood/rstudio/var/run
-myTMP="/tmp/$myUSER/ood/rstudio/tmp"
-myVARLIB="/tmp/$myUSER/ood/rstudio/var/lib"
-myVARRUN="/tmp/$myUSER/ood/rstudio/var/run"
+# Generate secure cookie for RStudio
+mkdir -p "${myTMP}/rstudio-server"
+python3 -c 'from uuid import uuid4; print(uuid4())' > "${myTMP}/rstudio-server/secure-cookie-key"
+chmod 0600 "${myTMP}/rstudio-server/secure-cookie-key"
 
 # Launch the RStudio Server
-
+export RS_LOG_CONF_FILE="${WORKDIR}/logging.conf"
 apptainer exec \
 	${APPTAINER_GPU_ENABLE} \
         --bind /scratch \
@@ -77,7 +75,15 @@ apptainer exec \
 	--bind /usr/share/tcl8.6 \
 	--bind /usr/lib64/tcl8.6 \
 	--bind /usr/bin/tclsh \
-	--bind $myTMP:/tmp \
-        --bind $myVARLIB:/var/lib/rstudio-server \
-        --bind $myVARRUN:/var/run/rstudio-server \
-        /u/yanzhan2/ondemand/dev/RStudio/container-files/rstudio-app.sif rserver --www-address=0.0.0.0 --www-port=$port --server-user "$myUSER"
+        --bind ${myTMP}:/tmp \
+        --bind ${myVARLIB}:/var/lib/rstudio-server \
+        --bind ${myVARRUN}:/var/run/rstudio-server \
+        /sw/oodimages/rstudio-app.sif rserver \
+        --server-daemonize=0 \
+        --www-address=0.0.0.0 \
+        --www-port=${port} \
+        --server-user="${myUSER}" \
+        --auth-none=0 \
+        --auth-pam-helper-path="${WORKDIR}/bin/auth" \
+        --auth-encrypt-password=0 \
+        --secure-cookie-key-file="${myTMP}/rstudio-server/secure-cookie-key" 2>&1
